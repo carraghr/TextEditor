@@ -1,5 +1,6 @@
 import os
 import wx
+from ctypes.test.test_pickling import name
 
 class Example(wx.Frame):
 
@@ -24,6 +25,9 @@ class Example(wx.Frame):
         fileMenu.Append(wx.ID_SAVE, "&Save")
         self.Bind(wx.EVT_MENU, self.OnSave, id=wx.ID_SAVE)
         
+        fileMenu.Append(wx.ID_SAVEAS, "&SaveAs")
+        self.Bind(wx.EVT_MENU, self.OnSaveAs, id=wx.ID_SAVEAS)
+        
         fileMenu.AppendSeparator()        
         fileMenu.Append(wx.ID_EXIT,'&Quite')
         self.Bind(wx.EVT_MENU, self.OnQuit, id=wx.ID_EXIT)
@@ -38,9 +42,20 @@ class Example(wx.Frame):
         self.SetTitle('Simple menu')
         self.Centre()
 
+    def getFileName(self):
+        for x in range(0,100):
+            name = "Untitled"+str(x)+".txt"
+            if not(os.path.exists("./"+name)):
+                return name
+
     def OnNew(self, e):
-        #TODO
-        self.Close()
+        name = self.getFileName()   
+        print(name)     
+        self.fileName = name
+        self.dirname = os.getcwd()
+        fileHandle = open(os.path.join(self.dirname, self.fileName),'w')
+        fileHandle.close();
+        self.SetTitle(self.fileName)
         
     def OnOpen(self, e):
         dig = wx.FileDialog(self, "Choose a File", self.dirname, "", "Text Files (*.txt)|*.txt", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -55,10 +70,28 @@ class Example(wx.Frame):
          
         print(dig.GetPath())
         dig.Destroy()
-        
+      
     def OnSave(self, e):
-        #TODO
-        self.Close()
+        content = self.control.GetValue()
+        fileHandle = open(os.path.join(self.dirname, self.fileName),'w')
+        fileHandle.write(content)
+        fileHandle.close();
+        self.SetTitle(self.fileName)
+  
+    def OnSaveAs(self, e):
+        dlg = wx.FileDialog(self,"Choose a file",self.dirname,"","Text Files (*.txt)|*.txt",wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
+        if dlg.ShowModal()==wx.ID_OK:
+            content = self.control.GetValue()
+            self.fileName = dlg.GetFilename()
+            self.dirname = dlg.GetDirectory()
+            
+            fileHandle = open(os.path.join(self.dirname, self.fileName),'w')
+            fileHandle.write(content)
+            fileHandle.close();
+            self.SetTitle(self.fileName)
+         
+        print(dlg.GetPath())
+        dlg.Destroy()
 
     def OnQuit(self, e):
         self.Close()
